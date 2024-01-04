@@ -71,8 +71,11 @@ namespace ASE_Programming_Language
                 // Check if the command is a graphical command before using graphics
                 if (command is CommandDrawCircle)
                 {
-                    Graphics graphics = this.CreateGraphics(); // Or get Graphics from a PictureBox
-                    command.Execute(interpreter, graphics);
+                    // Use the Graphics object of the PictureBox
+                    using (Graphics graphics = pictureBox1.CreateGraphics())
+                    {
+                        command.Execute(interpreter, graphics);
+                    }
                 }
                 else
                 {
@@ -85,6 +88,7 @@ namespace ASE_Programming_Language
                 // Handle unrecognized command
             }
         }
+
 
 
 
