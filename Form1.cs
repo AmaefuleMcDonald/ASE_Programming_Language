@@ -8,49 +8,83 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Collections.Generic; // Make sure to include this for List<>
+//using ProgrammingLibrary; // Assuming this is needed for ICommand and related classes
 
 namespace ASE_Programming_Language
 {
     public partial class Form1 : Form
     {
         private Interpreter interpreter = new Interpreter();
-        private List<ICommand> commandsInLoop; // Class-level variable
+        private List<ICommand> commandsInLoop;
 
         public Form1()
         {
             InitializeComponent();
 
-            // Create and add the button for drawing random circles
-            Button btnDrawRandomCircles = new Button();
-            btnDrawRandomCircles.Text = "Draw Random Circles";
-            btnDrawRandomCircles.Location = new Point(10, 10); // Set location appropriately
-            btnDrawRandomCircles.Click += new EventHandler(buttonTestLoop_Click);
-            this.Controls.Add(btnDrawRandomCircles);
-            // Initialize commandsInLoop here or in another appropriate place
-           // commandsInLoop = new List<ICommand>
-            commandsInLoop = new List<ICommand>();
-           
-
-
+            // Create and add the button for drawing shapes
+            Button drawButton = new Button
             {
-               // new CommandDrawCircle("circleSizeVariable");
-                new CommandVariableAssignment("counterVariable", 5); // Example command
-        };
+                Text = "R.Shapes",
+                Location = new Point(10, 10)
+            };
+            drawButton.Click += DrawButton_Click;
+            Controls.Add(drawButton);
+
+            // Create and add the button for drawing random circles
+            Button btnDrawRandomCircles = new Button
+            {
+                Text = "R.Circles",
+                Location = new Point(200, 290) // Adjust location to avoid overlap
+            };
+            btnDrawRandomCircles.Click += buttonTestLoop_Click;
+            Controls.Add(btnDrawRandomCircles);
+
+            // Initialize commandsInLoop
+            commandsInLoop = new List<ICommand>();
         }
 
-        // private void TestLoopCommand()
-        // {
-        //  List<ICommand> commandsInLoop = new List<ICommand>
-        // {
-        //  new CommandDrawCircle("circleSizeVariable"),
-        //new CommandVariableAssignment("counterVariable", 5) // Example command
-        //};
+        private void DrawButton_Click(object sender, EventArgs e)
+        {
+            DrawCompositeShape();
+        }
 
-        //  CommandLoop loopCommand = new CommandLoop(10, commandsInLoop); // Loop 10 times
+        private void DrawCompositeShape()
+        {
+            Random rnd = new Random();
 
-        // Execute the loop command through the interpreter
-        //   interpreter.ExecuteCommand(loopCommand);
-        // }
+            // Clearing the PictureBox before drawing new shapes
+            pictureBox1.Refresh();
+
+            // Getting the Graphics object from the PictureBox
+            using (Graphics graphics = pictureBox1.CreateGraphics())
+            {
+                // Draw a rectangle
+                graphics.DrawRectangle(Pens.Black, new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(20, 100), rnd.Next(20, 100)));
+
+                // Draw a circle
+                int radius = rnd.Next(10, 50);
+                graphics.DrawEllipse(Pens.Red, new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), radius, radius));
+
+                // Draw a line
+                graphics.DrawLine(Pens.Blue, new Point(rnd.Next(0, 100), rnd.Next(0, 100)), new Point(rnd.Next(100, 200), rnd.Next(100, 200)));
+
+                // Draw an ellipse
+                graphics.DrawEllipse(Pens.Green, new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(30, 80), rnd.Next(20, 60)));
+
+                // Draw a polygon (triangle)
+                Point[] points = {
+            new Point(rnd.Next(0, 200), rnd.Next(0, 200)),
+            new Point(rnd.Next(0, 200), rnd.Next(0, 200)),
+            new Point(rnd.Next(0, 200), rnd.Next(0, 200))
+        };
+                graphics.DrawPolygon(Pens.Orange, points);
+
+                // Draw an arc
+                graphics.DrawArc(Pens.Purple, new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(50, 100), rnd.Next(50, 100)), 0, rnd.Next(180, 360));
+            }
+        }
+
         private ICommand ParseCommand(string commandText)
         {
             string[] parts = commandText.Split(' ');
@@ -158,6 +192,7 @@ namespace ASE_Programming_Language
             Random rnd = new Random();
             commandsInLoop.Clear();
 
+            // Assuming you want to draw 10 random circles as before
             for (int i = 0; i < 10; i++)
             {
                 int x = rnd.Next(pictureBox1.Width);
@@ -165,8 +200,12 @@ namespace ASE_Programming_Language
                 int size = rnd.Next(10, 100);
                 commandsInLoop.Add(new CommandDrawCircle(size.ToString(), x, y));
             }
+
             // Create and execute the loop command
             CommandLoop loopCommand = new CommandLoop(commandsInLoop.Count, commandsInLoop);
+
+            // Ensure drawing is done in the PictureBox
+            pictureBox1.Refresh();  // Clear the PictureBox before drawing new shapes
             using (Graphics graphics = pictureBox1.CreateGraphics())
             {
                 foreach (var command in commandsInLoop)
@@ -179,10 +218,11 @@ namespace ASE_Programming_Language
             }
         }
 
-       // TestLoopCommand();
-        }
 
+        // TestLoopCommand();
     }
+
+}
 
 
 
