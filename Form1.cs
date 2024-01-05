@@ -15,8 +15,12 @@ namespace ASE_Programming_Language
 {
     public partial class Form1 : Form
     {
+        private int number; // Class-level variable
         private Interpreter interpreter = new Interpreter();
         private List<ICommand> commandsInLoop;
+        private object command;
+
+        //private int number;
 
         public Form1()
         {
@@ -32,13 +36,15 @@ namespace ASE_Programming_Language
             Controls.Add(drawButton);
 
             // Create and add the button for drawing random circles
-            Button btnDrawRandomCircles = new Button
-            {
-                Text = "R.Circles",
-                Location = new Point(200, 290) // Adjust location to avoid overlap
-            };
-            btnDrawRandomCircles.Click += buttonTestLoop_Click;
-            Controls.Add(btnDrawRandomCircles);
+           // Button btnDrawRandomCircles = new Button
+           // {
+               // Text = "R.Circles",
+               // Location = new Point(200, 290) // Adjust location to avoid overlap
+           // };
+           // btnDrawRandomCircles.Click += buttonTestLoop_Click;
+           // Controls.Add(btnDrawRandomCircles);
+
+        
 
             // Initialize commandsInLoop
             commandsInLoop = new List<ICommand>();
@@ -85,8 +91,57 @@ namespace ASE_Programming_Language
             }
         }
 
+        
+
         private ICommand ParseCommand(string commandText)
         {
+            // First, check for multi-line commands
+            var lines = commandText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length > 0 && lines[0].Trim().ToLower() == "begin" && lines[lines.Length - 1].Trim().ToLower() == "end")
+            {
+                List<ICommand> commands = new List<ICommand>();
+                for (int i = 1; i < lines.Length - 1; i++)
+                {
+                    string line = lines[i].Trim().ToLower();
+                    string[] commandParts = line.Split(' '); // Renamed to 'commandParts'
+
+                    switch (commandParts[0])
+                    {
+                        case "draw rectangle":
+                            if (commandParts.Length == 5 && int.TryParse(commandParts[1], out int x) && int.TryParse(commandParts[2], out int y) &&
+                                int.TryParse(commandParts[3], out int width) && int.TryParse(commandParts[4], out int height))
+                            {
+                                commands.Add(new CommandDrawRectangle(x, y, width, height));
+                            }
+                            break;
+                        case "draw circle":
+                            if (commandParts.Length == 4 && int.TryParse(commandParts[1], out int cx) && int.TryParse(commandParts[2], out int cy) &&
+                                int.TryParse(commandParts[3], out int size))
+                            {
+                                commands.Add(new CommandDrawCircle(size.ToString(), cx, cy)); // Assuming these are the correct parameters
+                            }
+                            break;
+                        case "draw line":
+                            if (commandParts.Length == 5 && int.TryParse(commandParts[1], out int sx) && int.TryParse(commandParts[2], out int sy) &&
+                                int.TryParse(commandParts[3], out int ex) && int.TryParse(commandParts[4], out int ey))
+                            {
+                                commands.Add(new CommandDrawLine(new Point(sx, sy), new Point(ex, ey))); // Assuming these are the correct parameters
+                            }
+                            break;
+                            // Add more cases as needed
+                    }
+                }
+                return new CommandMultiLine(commands);
+            }
+
+
+
+
+
+
+
+
+
             string[] parts = commandText.Split(' ');
 
             // Handle variable assignment
@@ -152,35 +207,84 @@ namespace ASE_Programming_Language
 
         private void button1_Click(object sender, EventArgs e)
         {
-            string commandText = textBox1.Text;
+
+            string commandText = textBox1.Text; // Declare and initialize commandText
+
+            // Now use commandText in your method calls
+            ExecuteMultiLineCommands(commandText);
             ICommand command = ParseCommand(commandText);
 
-            if (command != null)
+
+
+
+            // Single-line if statement to check if the commandText is empty
+            if (string.IsNullOrWhiteSpace(commandText)) MessageBox.Show("No command entered."); 
+             if (command != null)
+             {
+                 // Check if the command is a graphical command before using graphics
+                 if (command is CommandDrawCircle)
+                 {
+                     // Use the Graphics object of the PictureBox
+                     using (Graphics graphics = pictureBox1.CreateGraphics())
+                     {
+                         command.Execute(interpreter, graphics);
+                     }
+                 }
+                 else
+                 {
+                     // For non-graphical commands, use the Execute method without Graphics
+                    command.Execute(interpreter);
+
+                 }
+             }
+             else
+             {
+                 // Handle unrecognized command
+             }
+            
+        }
+
+
+        private void ExecuteMultiLineCommands(string commandText)
+        {
+            var lines = commandText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
             {
-                // Check if the command is a graphical command before using graphics
-                if (command is CommandDrawCircle)
+                if (line.Trim().ToLower().StartsWith("set number"))
                 {
-                    // Use the Graphics object of the PictureBox
-                    using (Graphics graphics = pictureBox1.CreateGraphics())
+                    var parts = line.Split(' ');
+                    if (parts.Length == 3 && int.TryParse(parts[2], out number))
                     {
-                        command.Execute(interpreter, graphics);
+                        // Number is successfully set, display the number
+                        MessageBox.Show("Number set to: " + number.ToString());
+                        continue; // Continue to process other commands
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid number format.");
+                        return; // Stop processing further commands
                     }
                 }
-                else
-                {
-                    // For non-graphical commands, use the Execute method without Graphics
-                    command.Execute(interpreter);
-                }
-            }
-            else
-            {
-                // Handle unrecognized command
+
+                // ... (rest of your existing logic for processing if-endif blocks) ...
             }
         }
 
 
 
-
+        private void ProcessCommand(string command)
+        {
+            if (command.Trim().ToLower() == "print command 1 executed")
+            {
+                MessageBox.Show("Command 1 executed.");
+            }
+            else if (command.Trim().ToLower() == "print command 2 executed")
+            {
+                MessageBox.Show("Command 2 executed.");
+            }
+            // Add more command processing as needed
+        }
 
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
@@ -218,6 +322,46 @@ namespace ASE_Programming_Language
             }
         }
 
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (int.TryParse(textBox1.Text, out int number) && number > 10)
+            {
+                MessageBox.Show("The number is greater than 10.");
+            }
+            else
+            {
+                MessageBox.Show("Enter a number greater than 10.");
+            }
+        }
+
+
+
+
+
+        private bool EvaluateCondition(string conditionLine)
+        {
+            // Example: "if number > 10"
+            var parts = conditionLine.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 3 && parts[0].ToLower() == "if" && parts[1].ToLower() == "number" && parts[2] == ">" && int.TryParse(parts[3], out int parsedNumber))
+            {
+                return parsedNumber > 10;
+            }
+            return false;
+        }
+
+        /* private void ProcessCommand(string command)
+         {
+             if (command.Trim().ToLower() == "print command 1 executed")
+             {
+                 MessageBox.Show("Command 1 executed.");
+             }
+             else if (command.Trim().ToLower() == "print command 2 executed")
+             {
+                 MessageBox.Show("Command 2 executed.");
+             }
+             // Add more command processing as needed
+         }
+        */
 
         // TestLoopCommand();
     }

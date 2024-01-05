@@ -47,7 +47,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandDrawCircle.cs" />
+    <Compile Include="CommandDrawLine.cs" />
+    <Compile Include="CommandDrawRectangle.cs" />
     <Compile Include="CommandLoop.cs" />
+    <Compile Include="CommandMultiLine.cs" />
     <Compile Include="CommandVariableAssignment.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

@@ -6,11 +6,19 @@ public class CommandLoop : ICommand
 {
     private int loopCount;
     private List<ICommand> commands;
+    private string loopVariable;
+    private List<ICommand> commandList;
 
     public CommandLoop(int loopCount, List<ICommand> commands)
     {
         this.loopCount = loopCount;
         this.commands = commands;
+    }
+
+    public CommandLoop(string loopVariable, List<ICommand> commandList)
+    {
+        this.loopVariable = loopVariable;
+        this.commandList = commandList;
     }
 
     public void Execute(Interpreter interpreter)
