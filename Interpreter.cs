@@ -17,34 +17,18 @@ namespace ASE_Programming_Language
     {
         private Dictionary<string, int> variables = new Dictionary<string, int>();
 
-        public void ExecuteCommand(ICommand command)
+        public int GetVariableValue(string variableName)
         {
-            if (command is CommandLoop loopCommand)
+            if (variables.ContainsKey(variableName))
             {
-                loopCommand.Execute(this);
+                return variables[variableName];
             }
-            else
-            {
-                // Handle other command types
-                command.Execute(this);
-            }
+            throw new Exception($"Variable '{variableName}' not defined.");
         }
 
-        public void SetVariable(string name, int value)
+        public void SetVariable(string variableName, int value)
         {
-            variables[name] = value;
-        }
-
-        public int GetVariableValue(string name)
-        {
-            if (variables.TryGetValue(name, out int value))
-            {
-                return value;
-            }
-            else
-            {
-                throw new Exception($"Variable '{name}' not defined.");
-            }
+            variables[variableName] = value;
         }
 
         // Method to execute a drawing command

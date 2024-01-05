@@ -4,36 +4,38 @@ using System.Drawing;
 
 public class CommandLoop : ICommand
 {
-    private int loopCount;
+
+    private string loopCountVariableName;
     private List<ICommand> commands;
+    private int loopCount;
+   // private List<ICommand> commands;
     private string loopVariable;
     private List<ICommand> commandList;
 
+    public CommandLoop(string loopCountVariableName, List<ICommand> commands)
+    {
+        this.loopCountVariableName = loopCountVariableName;
+        this.commands = commands;
+    }
     public CommandLoop(int loopCount, List<ICommand> commands)
     {
         this.loopCount = loopCount;
         this.commands = commands;
     }
 
-    public CommandLoop(string loopVariable, List<ICommand> commandList)
-    {
-        this.loopVariable = loopVariable;
-        this.commandList = commandList;
-    }
-
+    /* public CommandLoop(string loopVariable, List<ICommand> commandList)
+     {
+         this.loopVariable = loopVariable;
+         this.commandList = commandList;
+     }
+    */
     public void Execute(Interpreter interpreter)
     {
-        foreach (var command in commands)
+        int loopCount = interpreter.GetVariableValue(loopCountVariableName);
+        for (int i = 0; i < loopCount; i++)
         {
-            // Check if the command is a graphical command
-            if (command is CommandDrawCircle)
+            foreach (var command in commands)
             {
-                // Handle graphical command execution
-                // For example, you might need to pass a Graphics object from a PictureBox or other control
-            }
-            else
-            {
-                // Execute non-graphical commands as normal
                 command.Execute(interpreter);
             }
         }

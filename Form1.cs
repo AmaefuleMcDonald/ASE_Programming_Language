@@ -209,12 +209,44 @@ namespace ASE_Programming_Language
         {
 
             string commandText = textBox1.Text; // Declare and initialize commandText
-
+            string input = textBox1.Text; // Assuming textBoxCommand is your textbox
+            string[] parts = input.Split(' ');
             // Now use commandText in your method calls
             ExecuteMultiLineCommands(commandText);
             ICommand command = ParseCommand(commandText);
 
+            int loopCount = 0; // Declare loopCount here for broader scope
+            if (parts.Length >= 2)
+            {
+                if (parts[0] == "set" && parts[1] == "loop" && int.TryParse(parts[2], out loopCount))
+                {
+                    // Set loop count variable
+                    interpreter.SetVariable("loopCount", loopCount);
+                }
+                else if (parts[0] == "circle" && parts[1] == "loop")
+                {
+                    int radius = int.Parse(parts[2]);
+                    int xIncrement = int.Parse(parts[3]);
+                    int yIncrement = int.Parse(parts[4]);
 
+                    loopCount = interpreter.GetVariableValue("loopCount");
+                    int x = 0, y = 0; // Starting position for the first circle
+
+                    for (int i = 0; i < loopCount; i++)
+                    {
+                        // Add circle command for each iteration
+                        using (Graphics graphics = pictureBox1.CreateGraphics())
+                        {
+                            // Draw the circle at the current position
+                            graphics.DrawEllipse(Pens.Black, x, y, radius * 2, radius * 2);
+
+                            // Increment position for the next circle
+                            x += xIncrement;
+                            y += yIncrement;
+                        }
+                    }
+                }
+            }
 
 
             // Single-line if statement to check if the commandText is empty
