@@ -266,6 +266,29 @@ namespace ASE_Programming_Language
                         return; // Stop processing further commands
                     }
                 }
+                else
+                    {
+                    
+                        string trimmedLine = line.Trim().ToLower();
+                        if (trimmedLine.StartsWith("set number"))
+                        {
+                            // Existing logic for setting number...
+                        }
+                        else if (trimmedLine.StartsWith("size = count *"))
+                        {
+                            string[] parts = trimmedLine.Split('*');
+                            if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int baseSize))
+                            {
+                                DrawConcentricCircles(baseSize);
+                            }
+                            else
+                            {
+                                MessageBox.Show("Invalid format for size command.");
+                            }
+                        }
+                        // ... other command processing logic ...
+                    }
+                
 
                 // ... (rest of your existing logic for processing if-endif blocks) ...
             }
@@ -349,21 +372,23 @@ namespace ASE_Programming_Language
             return false;
         }
 
-        /* private void ProcessCommand(string command)
-         {
-             if (command.Trim().ToLower() == "print command 1 executed")
-             {
-                 MessageBox.Show("Command 1 executed.");
-             }
-             else if (command.Trim().ToLower() == "print command 2 executed")
-             {
-                 MessageBox.Show("Command 2 executed.");
-             }
-             // Add more command processing as needed
-         }
-        */
+        private void DrawConcentricCircles(int baseSize)
+        {
+            using (Graphics graphics = pictureBox1.CreateGraphics())
+            {
+                pictureBox1.Refresh(); // Clear the PictureBox
 
-        // TestLoopCommand();
+                int centerX = pictureBox1.Width / 2;
+                int centerY = pictureBox1.Height / 2;
+
+                for (int count = 1; count <= 10; count++)
+                {
+                    int size = count * baseSize;
+                    graphics.DrawEllipse(Pens.Black, centerX - size, centerY - size, size * 2, size * 2);
+                }
+            }
+        }
+
     }
 
 }
