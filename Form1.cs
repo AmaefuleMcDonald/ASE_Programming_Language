@@ -14,16 +14,49 @@ namespace ASE_Programming_Language
     public partial class Form1 : Form
     {
         private Interpreter interpreter = new Interpreter();
+        private List<ICommand> commandsInLoop; // Class-level variable
+
         public Form1()
         {
             InitializeComponent();
+
+            // Create and add the button for drawing random circles
+            Button btnDrawRandomCircles = new Button();
+            btnDrawRandomCircles.Text = "Draw Random Circles";
+            btnDrawRandomCircles.Location = new Point(10, 10); // Set location appropriately
+            btnDrawRandomCircles.Click += new EventHandler(buttonTestLoop_Click);
+            this.Controls.Add(btnDrawRandomCircles);
+            // Initialize commandsInLoop here or in another appropriate place
+           // commandsInLoop = new List<ICommand>
+            commandsInLoop = new List<ICommand>();
+           
+
+
+            {
+               // new CommandDrawCircle("circleSizeVariable");
+                new CommandVariableAssignment("counterVariable", 5); // Example command
+        };
         }
 
+        // private void TestLoopCommand()
+        // {
+        //  List<ICommand> commandsInLoop = new List<ICommand>
+        // {
+        //  new CommandDrawCircle("circleSizeVariable"),
+        //new CommandVariableAssignment("counterVariable", 5) // Example command
+        //};
+
+        //  CommandLoop loopCommand = new CommandLoop(10, commandsInLoop); // Loop 10 times
+
+        // Execute the loop command through the interpreter
+        //   interpreter.ExecuteCommand(loopCommand);
+        // }
         private ICommand ParseCommand(string commandText)
         {
             string[] parts = commandText.Split(' ');
 
             // Handle variable assignment
+
             if (parts.Length == 3 && parts[1].Trim() == "=")
             {
                 string variableName = parts[0].Trim();
@@ -32,10 +65,14 @@ namespace ASE_Programming_Language
                     return new CommandVariableAssignment(variableName, value);
                 }
             }
+
             // Handle drawing command
             else if (parts.Length == 2 && parts[0].Trim().ToLower() == "circle")
             {
-                return new CommandDrawCircle(parts[1].Trim());
+                // You might want to set default x and y values or allow users to input them
+                int defaultX = 0;
+                int defaultY = 0;
+                return new CommandDrawCircle(parts[1].Trim(), defaultX, defaultY);
             }
             // Handle initialization command
             else if (parts.Length == 4 && parts[0].Trim().ToLower() == "initialize" && parts[2].Trim().ToLower() == "with")
@@ -44,6 +81,24 @@ namespace ASE_Programming_Language
                 if (int.TryParse(parts[3].Trim(), out int value))
                 {
                     return new CommandInitialization(variableName, value);
+                }
+            }
+            if (commandText.StartsWith("loop"))
+            {
+                string[] loopParts = commandText.Substring(4).Trim().Split(' ');
+                if (loopParts.Length >= 2 && int.TryParse(loopParts[0], out int loopCount))
+                {
+                    string[] loopCommands = loopParts[1].Trim(new char[] { '[', ']' }).Split(';');
+                    List<ICommand> commands = new List<ICommand>();
+                    foreach (string cmd in loopCommands)
+                    {
+                        ICommand innerCommand = ParseCommand(cmd.Trim());
+                        if (innerCommand != null)
+                        {
+                            commands.Add(innerCommand);
+                        }
+                    }
+                    return new CommandLoop(loopCount, commands);
                 }
             }
 
@@ -97,15 +152,40 @@ namespace ASE_Programming_Language
         {
 
         }
-       
 
+        private void buttonTestLoop_Click(object sender, EventArgs e)
+        {
+            Random rnd = new Random();
+            commandsInLoop.Clear();
 
+            for (int i = 0; i < 10; i++)
+            {
+                int x = rnd.Next(pictureBox1.Width);
+                int y = rnd.Next(pictureBox1.Height);
+                int size = rnd.Next(10, 100);
+                commandsInLoop.Add(new CommandDrawCircle(size.ToString(), x, y));
+            }
+            // Create and execute the loop command
+            CommandLoop loopCommand = new CommandLoop(commandsInLoop.Count, commandsInLoop);
+            using (Graphics graphics = pictureBox1.CreateGraphics())
+            {
+                foreach (var command in commandsInLoop)
+                {
+                    if (command is CommandDrawCircle drawCircleCommand)
+                    {
+                        drawCircleCommand.Execute(interpreter, graphics);
+                    }
+                }
+            }
+        }
 
+       // TestLoopCommand();
+        }
 
     }
 
 
-}
+
 
 
 

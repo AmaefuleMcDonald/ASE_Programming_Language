@@ -17,6 +17,19 @@ namespace ASE_Programming_Language
     {
         private Dictionary<string, int> variables = new Dictionary<string, int>();
 
+        public void ExecuteCommand(ICommand command)
+        {
+            if (command is CommandLoop loopCommand)
+            {
+                loopCommand.Execute(this);
+            }
+            else
+            {
+                // Handle other command types
+                command.Execute(this);
+            }
+        }
+
         public void SetVariable(string name, int value)
         {
             variables[name] = value;
@@ -24,9 +37,9 @@ namespace ASE_Programming_Language
 
         public int GetVariableValue(string name)
         {
-            if (variables.ContainsKey(name))
+            if (variables.TryGetValue(name, out int value))
             {
-                return variables[name];
+                return value;
             }
             else
             {
@@ -58,6 +71,7 @@ namespace ASE_Programming_Language
         public void Execute(Interpreter interpreter)
         {
             interpreter.SetVariable(variableName, value);
+            
         }
 
         // Implement the Execute method with Graphics parameter
@@ -71,6 +85,7 @@ namespace ASE_Programming_Language
         {
             return variableName;
         }
+
     }
 
 }
