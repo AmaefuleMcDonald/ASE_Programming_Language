@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic; // Make sure to include this for List<>
+using System.Diagnostics.Eventing.Reader;
 //using ProgrammingLibrary; // Assuming this is needed for ICommand and related classes
 
 namespace ASE_Programming_Language
@@ -16,6 +17,7 @@ namespace ASE_Programming_Language
     public partial class Form1 : Form
     {
         private int number; // Class-level variable
+        private int size;   // new variable for size
         private Interpreter interpreter = new Interpreter();
         private List<ICommand> commandsInLoop;
         private object command;
@@ -280,6 +282,7 @@ namespace ASE_Programming_Language
         private void ExecuteMultiLineCommands(string commandText)
         {
             var lines = commandText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            bool conditionMet = true;
 
             foreach (var line in lines)
             {
@@ -299,27 +302,57 @@ namespace ASE_Programming_Language
                     }
                 }
                 else
+                {
+
+                    string trimmedLine = line.Trim().ToLower();
+                    if (trimmedLine.StartsWith("set number"))
                     {
-                    
-                        string trimmedLine = line.Trim().ToLower();
-                        if (trimmedLine.StartsWith("set number"))
-                        {
-                            // Existing logic for setting number...
-                        }
-                        else if (trimmedLine.StartsWith("size = count *"))
-                        {
-                            string[] parts = trimmedLine.Split('*');
-                            if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int baseSize))
-                            {
-                                DrawConcentricCircles(baseSize);
-                            }
-                            else
-                            {
-                                MessageBox.Show("Invalid format for size command.");
-                            }
-                        }
-                        // ... other command processing logic ...
+                        // Existing logic for setting number...
                     }
+                    else if (trimmedLine.StartsWith("size = count *"))
+                    {
+                        string[] parts = trimmedLine.Split('*');
+                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int baseSize))
+                        {
+                            DrawConcentricCircles(baseSize);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Invalid format for size command.");
+                        }
+                    }
+                    // ... other command processing logic ...
+                }
+     
+                if(conditionMet)
+                {
+                    string trimmedLine = line.Trim().ToLower();
+                    if (trimmedLine.StartsWith("set number"))
+                    {
+                        // Existing logic for setting number...
+                    }
+                    else if (trimmedLine.StartsWith("size ="))
+                    {
+                        string[] parts = trimmedLine.Split('=');
+                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int parsedSize))
+                        {
+                            size = parsedSize; // Set the class-level size variable
+                        }
+                    }
+                    else if (trimmedLine.StartsWith("if size >"))
+                    {
+                        string[] parts = trimmedLine.Split('>');
+                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int comparisonValue))
+                        {
+                            conditionMet = size > comparisonValue;
+                        }
+                    }
+                    else if (trimmedLine.StartsWith("print") && conditionMet)
+                    {
+                        MessageBox.Show(trimmedLine.Substring(6)); // Display the message after "print"
+                    }
+                }
+            
                 
 
                 // ... (rest of your existing logic for processing if-endif blocks) ...
