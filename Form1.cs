@@ -283,6 +283,8 @@ namespace ASE_Programming_Language
         {
             var lines = commandText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             bool conditionMet = true;
+            bool inIfBlock = true;
+            List<string> commandBlock = new List<string>();
 
             foreach (var line in lines)
             {
@@ -327,16 +329,12 @@ namespace ASE_Programming_Language
                 if(conditionMet)
                 {
                     string trimmedLine = line.Trim().ToLower();
-                    if (trimmedLine.StartsWith("set number"))
-                    {
-                        // Existing logic for setting number...
-                    }
-                    else if (trimmedLine.StartsWith("size ="))
+                    if (trimmedLine.StartsWith("size ="))
                     {
                         string[] parts = trimmedLine.Split('=');
                         if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int parsedSize))
                         {
-                            size = parsedSize; // Set the class-level size variable
+                            size = parsedSize; // Set the size variable
                         }
                     }
                     else if (trimmedLine.StartsWith("if size >"))
@@ -345,15 +343,29 @@ namespace ASE_Programming_Language
                         if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int comparisonValue))
                         {
                             conditionMet = size > comparisonValue;
+                            inIfBlock = true;
                         }
                     }
-                    else if (trimmedLine.StartsWith("print") && conditionMet)
+                    else if (trimmedLine == "endif")
                     {
-                        MessageBox.Show(trimmedLine.Substring(6)); // Display the message after "print"
+                        inIfBlock = false;
+                        if (conditionMet)
+                        {
+                            foreach (var cmd in commandBlock)
+                            {
+                                ProcessCommand(cmd);
+                            }
+                        }
+                        commandBlock.Clear();
+                        conditionMet = false;
+                    }
+                    else if (inIfBlock)
+                    {
+                        commandBlock.Add(trimmedLine);
                     }
                 }
-            
-                
+
+
 
                 // ... (rest of your existing logic for processing if-endif blocks) ...
             }
@@ -363,13 +375,9 @@ namespace ASE_Programming_Language
 
         private void ProcessCommand(string command)
         {
-            if (command.Trim().ToLower() == "print command 1 executed")
+            if (command.StartsWith("print"))
             {
-                MessageBox.Show("Command 1 executed.");
-            }
-            else if (command.Trim().ToLower() == "print command 2 executed")
-            {
-                MessageBox.Show("Command 2 executed.");
+                MessageBox.Show(command.Substring(6));
             }
             // Add more command processing as needed
         }
