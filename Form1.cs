@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic; // Make sure to include this for List<>
 using System.Diagnostics.Eventing.Reader;
+using static System.Windows.Forms.LinkLabel;
 //using ProgrammingLibrary; // Assuming this is needed for ICommand and related classes
 
 namespace ASE_Programming_Language
@@ -215,6 +216,12 @@ namespace ASE_Programming_Language
             string[] parts = input.Split(' ');
             // Now use commandText in your method calls
             ExecuteMultiLineCommands(commandText);
+            string[] lines = commandText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries); // Split the command text into lines
+            List<string> errors = CheckSyntax(lines);
+
+   
+           
+
             ICommand command = ParseCommand(commandText);
 
             int loopCount = 0; // Declare loopCount here for broader scope
@@ -275,7 +282,16 @@ namespace ASE_Programming_Language
              {
                  // Handle unrecognized command
              }
-            
+            if (errors.Count > 0)
+            {
+                // Display all errors
+                MessageBox.Show("Errors found:\n" + string.Join("\n", errors));
+            }
+            else
+            {
+                // Proceed with command execution if no errors
+                ExecuteCommands(lines);
+            }
         }
 
 
@@ -458,6 +474,89 @@ namespace ASE_Programming_Language
                 {
                     int size = count * baseSize;
                     graphics.DrawEllipse(Pens.Black, centerX - size, centerY - size, size * 2, size * 2);
+                }
+            }
+        }
+
+        private List<string> CheckSyntax(string[] lines)
+        {
+            List<string> errors = new List<string>();
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                string[] parts = line.Split(' ');
+
+
+                if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
+                    continue; // Skip empty lines
+
+                switch (parts[0].ToLower())
+                {
+                    case "set":
+                        if (!(parts.Length == 3 && parts[1] == "loop" && int.TryParse(parts[2], out _)))
+                            errors.Add($"Syntax error on line {i + 1}: Invalid 'set loop' command.");
+                        break;
+                    case "circle":
+                        if (parts.Length == 2 && parts[1] == "size")
+                        {
+                            // 'circle size' command - do nothing as it's valid
+                        }
+                        else if (!(parts.Length == 5 && parts[1] == "loop" && int.TryParse(parts[2], out _) &&
+                            int.TryParse(parts[3], out _) && int.TryParse(parts[4], out _)))
+                        {
+                            errors.Add($"Syntax error on line {i + 1}: Invalid 'circle' command.");
+                        }
+                        break;
+                    case "size":
+                        if (!(parts.Length == 3 && parts[1] == "=" &&
+                              (int.TryParse(parts[2], out _) || parts[2].ToLower() == "count * 10")))
+                        {
+                           // errors.Add($"Syntax error on line {i + 1}: Invalid 'size' assignment.");
+                        }
+                        break;
+                    case "if":
+                        if (!(parts.Length >= 4 && parts[1] == "size" && parts[2] == ">" && int.TryParse(parts[3], out _)))
+                            errors.Add($"Syntax error on line {i + 1}: Invalid 'if' condition.");
+                        break;
+                    case "print":
+                        if (parts.Length < 2)
+                            errors.Add($"Syntax error on line {i + 1}: 'print' command requires additional text.");
+                        break;
+                    case "endif":
+                        if (parts.Length != 1)
+                            errors.Add($"Syntax error on line {i + 1}: 'endif' command should not have additional parameters.");
+                        break;
+
+                    default:
+                        errors.Add($"Syntax error on line {i + 1}: Unknown command '{parts[0]}'.");
+                        break;
+
+                }
+            }
+            return errors;
+        }
+
+        private void ExecuteCommands(string[] lines)
+        {
+            using (Graphics graphics = pictureBox1.CreateGraphics())
+            {
+                foreach (var line in lines)
+                {
+                    // Parse the command
+                    ICommand command = ParseCommand(line);
+                    if (command != null)
+                    {
+                        if (command is CommandDrawCircle && line == "circle size")
+                        {
+                            // Execute the CommandDrawCircle with the Graphics object
+                            ((CommandDrawCircle)command).Execute(interpreter, graphics);
+                        }
+                        else
+                        {
+                            // Execute other commands normally
+                            command.Execute(interpreter);
+                        }
+                    }
                 }
             }
         }
