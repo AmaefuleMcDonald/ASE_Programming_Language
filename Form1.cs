@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Collections.Generic; // Make sure to include this for List<>
 using System.Diagnostics.Eventing.Reader;
 using static System.Windows.Forms.LinkLabel;
+using System.Security.Cryptography;
 //using ProgrammingLibrary; // Assuming this is needed for ICommand and related classes
 
 namespace ASE_Programming_Language
@@ -22,13 +23,13 @@ namespace ASE_Programming_Language
         private Interpreter interpreter = new Interpreter();
         private List<ICommand> commandsInLoop;
         private object command;
-
+        private readonly IRandomNumberGenerator _randomNumberGenerator;
         //private int number;
 
-        public Form1()
+        public Form1(IRandomNumberGenerator randomNumberGenerator)
         {
             InitializeComponent();
-
+            _randomNumberGenerator = randomNumberGenerator;
             // Create and add the button for drawing shapes
             Button drawButton = new Button
             {
@@ -298,89 +299,93 @@ namespace ASE_Programming_Language
         private void ExecuteMultiLineCommands(string commandText)
         {
             var lines = commandText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            using (Graphics graphics = pictureBox1.CreateGraphics());
             bool conditionMet = true;
             bool inIfBlock = true;
             List<string> commandBlock = new List<string>();
 
             foreach (var line in lines)
             {
-                if (line.Trim().ToLower().StartsWith("set number"))
-                {
-                    var parts = line.Split(' ');
-                    if (parts.Length == 3 && int.TryParse(parts[2], out number))
-                    {
-                        // Number is successfully set, display the number
-                        MessageBox.Show("Number set to: " + number.ToString());
-                        continue; // Continue to process other commands
-                    }
-                    else
-                    {
-                        MessageBox.Show("Invalid number format.");
-                        return; // Stop processing further commands
-                    }
-                }
-                else
-                {
-
-                    string trimmedLine = line.Trim().ToLower();
-                    if (trimmedLine.StartsWith("set number"))
-                    {
-                        // Existing logic for setting number...
-                    }
-                    else if (trimmedLine.StartsWith("size = count *"))
-                    {
-                        string[] parts = trimmedLine.Split('*');
-                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int baseSize))
+                
+                        if (line.Trim().ToLower().StartsWith("set number"))
                         {
-                            DrawConcentricCircles(baseSize);
+                            var parts = line.Split(' ');
+                            if (parts.Length == 3 && int.TryParse(parts[2], out number))
+                            {
+                                // Number is successfully set, display the number
+                                MessageBox.Show("Number set to: " + number.ToString());
+                                continue; // Continue to process other commands
+                            }
+                            else
+                            {
+                                MessageBox.Show("Invalid number format.");
+                                return; // Stop processing further commands
+                            }
                         }
                         else
                         {
-                            MessageBox.Show("Invalid format for size command.");
+
+                            string trimmedLine = line.Trim().ToLower();
+                            if (trimmedLine.StartsWith("set number"))
+                            {
+                                // Existing logic for setting number...
+                            }
+                            else if (trimmedLine.StartsWith("size = count *"))
+                            {
+                                string[] parts = trimmedLine.Split('*');
+                                if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int baseSize))
+                                {
+                                    DrawConcentricCircles(baseSize);
+                                }
+                                else
+                                {
+                                    MessageBox.Show("Invalid format for size command.");
+                                }
+                            }
+                            // ... other command processing logic ...
                         }
-                    }
-                    // ... other command processing logic ...
-                }
-     
-                if(conditionMet)
-                {
-                    string trimmedLine = line.Trim().ToLower();
-                    if (trimmedLine.StartsWith("size ="))
-                    {
-                        string[] parts = trimmedLine.Split('=');
-                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int parsedSize))
-                        {
-                            size = parsedSize; // Set the size variable
-                        }
-                    }
-                    else if (trimmedLine.StartsWith("if size >"))
-                    {
-                        string[] parts = trimmedLine.Split('>');
-                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int comparisonValue))
-                        {
-                            conditionMet = size > comparisonValue;
-                            inIfBlock = true;
-                        }
-                    }
-                    else if (trimmedLine == "endif")
-                    {
-                        inIfBlock = false;
+
                         if (conditionMet)
                         {
-                            foreach (var cmd in commandBlock)
+                            string trimmedLine = line.Trim().ToLower();
+                            if (trimmedLine.StartsWith("size ="))
                             {
-                                ProcessCommand(cmd);
+                                string[] parts = trimmedLine.Split('=');
+                                if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int parsedSize))
+                                {
+                                    size = parsedSize; // Set the size variable
+                                }
+                            }
+                            else if (trimmedLine.StartsWith("if size >"))
+                            {
+                                string[] parts = trimmedLine.Split('>');
+                                if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int comparisonValue))
+                                {
+                                    conditionMet = size > comparisonValue;
+                                    inIfBlock = true;
+                                }
+                            }
+                            else if (trimmedLine == "endif")
+                            {
+                                inIfBlock = false;
+                                if (conditionMet)
+                                {
+                                    foreach (var cmd in commandBlock)
+                                    {
+                                        ProcessCommand(cmd);
+                                    }
+                                }
+                                commandBlock.Clear();
+                                conditionMet = false;
+                            }
+                            else if (inIfBlock)
+                            {
+                                commandBlock.Add(trimmedLine);
                             }
                         }
-                        commandBlock.Clear();
-                        conditionMet = false;
-                    }
-                    else if (inIfBlock)
-                    {
-                        commandBlock.Add(trimmedLine);
-                    }
-                }
 
+                
+            
 
 
                 // ... (rest of your existing logic for processing if-endif blocks) ...
@@ -405,23 +410,12 @@ namespace ASE_Programming_Language
 
         private void buttonTestLoop_Click(object sender, EventArgs e)
         {
-            Random rnd = new Random();
             commandsInLoop.Clear();
+            commandsInLoop.AddRange(GenerateRandomCommands(10));
 
-            // Assuming you want to draw 10 random circles as before
-            for (int i = 0; i < 10; i++)
-            {
-                int x = rnd.Next(pictureBox1.Width);
-                int y = rnd.Next(pictureBox1.Height);
-                int size = rnd.Next(10, 100);
-                commandsInLoop.Add(new CommandDrawCircle(size.ToString(), x, y));
-            }
-
-            // Create and execute the loop command
             CommandLoop loopCommand = new CommandLoop(commandsInLoop.Count, commandsInLoop);
+            pictureBox1.Refresh();
 
-            // Ensure drawing is done in the PictureBox
-            pictureBox1.Refresh();  // Clear the PictureBox before drawing new shapes
             using (Graphics graphics = pictureBox1.CreateGraphics())
             {
                 foreach (var command in commandsInLoop)
@@ -433,6 +427,23 @@ namespace ASE_Programming_Language
                 }
             }
         }
+
+
+        public List<ICommand> GenerateRandomCommands(int numberOfCommands)
+        {
+            List<ICommand> commands = new List<ICommand>();
+            for (int i = 0; i < numberOfCommands; i++)
+            {
+                int x = _randomNumberGenerator.Next(0, pictureBox1.Width);
+                int y = _randomNumberGenerator.Next(0, pictureBox1.Height);
+                int size = _randomNumberGenerator.Next(10, 100);
+                commands.Add(new CommandDrawCircle(size.ToString(), x, y));
+            }
+            return commands;
+        }
+
+
+
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -558,6 +569,31 @@ namespace ASE_Programming_Language
                         }
                     }
                 }
+            }
+        }
+
+        private void ProcessDrawingCommand(string[] parts, Graphics graphics)
+        {
+            switch (parts[1].ToLower())
+            {
+                case "rectangle":
+                    // Expected format: draw rectangle x y width height
+                    if (parts.Length == 6 && int.TryParse(parts[2], out int x) &&
+                        int.TryParse(parts[3], out int y) && int.TryParse(parts[4], out int width) &&
+                        int.TryParse(parts[5], out int height))
+                    {
+                        graphics.DrawRectangle(Pens.Black, x, y, width, height);
+                    }
+                    break;
+                case "circle":
+                    // Expected format: draw circle x y radius
+                    if (parts.Length == 5 && int.TryParse(parts[2], out int cx) &&
+                        int.TryParse(parts[3], out int cy) && int.TryParse(parts[4], out int radius))
+                    {
+                        graphics.DrawEllipse(Pens.Red, cx - radius, cy - radius, radius * 2, radius * 2);
+                    }
+                    break;
+                    // Add cases for other shapes
             }
         }
 
