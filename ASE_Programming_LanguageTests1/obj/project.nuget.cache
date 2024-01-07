@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "Q6jVLpyAhSqpQFT6t1G4pSAygmM3SQsUERF2CiNWt3lPMme8Qs/A7/WMAPaBU/5VAdt3Ms0Igz2KYQxHgi0d3g==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\PC\\Downloads\\ASE_Programming_LanguageTests1\\ASE_Programming_LanguageTests1.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\PC\\.nuget\\packages\\microsoft.codecoverage\\16.5.0\\microsoft.codecoverage.16.5.0.nupkg.sha512",
+    "C:\\Users\\PC\\.nuget\\packages\\microsoft.net.test.sdk\\16.5.0\\microsoft.net.test.sdk.16.5.0.nupkg.sha512",
+    "C:\\Users\\PC\\.nuget\\packages\\nunit\\3.12.0\\nunit.3.12.0.nupkg.sha512",
+    "C:\\Users\\PC\\.nuget\\packages\\nunit3testadapter\\3.16.1\\nunit3testadapter.3.16.1.nupkg.sha512",
+    "C:\\Users\\PC\\.nuget\\packages\\system.windows.forms\\4.0.0\\system.windows.forms.4.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
