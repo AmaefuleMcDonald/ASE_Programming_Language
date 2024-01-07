@@ -12,8 +12,10 @@ using System.Collections.Generic; // Make sure to include this for List<>
 using System.Diagnostics.Eventing.Reader;
 using static System.Windows.Forms.LinkLabel;
 using System.Security.Cryptography;
+using System.Runtime.CompilerServices;
 //using ProgrammingLibrary; // Assuming this is needed for ICommand and related classes
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("ASE_Programming_LanguageTests1")]
 namespace ASE_Programming_Language
 {
     public partial class Form1 : Form
@@ -24,6 +26,11 @@ namespace ASE_Programming_Language
         private List<ICommand> commandsInLoop;
         private object command;
         private readonly IRandomNumberGenerator _randomNumberGenerator;
+        public int LastGapMultiplier { get; private set; }
+        public double Number { get; internal set; }
+        public double SomeConditionFlag { get; internal set; }
+        public double String { get; internal set; }
+
         //private int number;
 
         public Form1(IRandomNumberGenerator randomNumberGenerator)
@@ -95,7 +102,56 @@ namespace ASE_Programming_Language
             }
         }
 
-        
+        public class ShapeInfo
+        {
+            public enum ShapeType { Rectangle, Circle, Line, Ellipse, Polygon, Arc }
+            public ShapeType Type { get; set; }
+            public Rectangle Bounds { get; set; }
+            public Point[] Points { get; set; } // For polygons and lines
+            public int StartAngle { get; set; } // For arcs
+            public int SweepAngle { get; set; } 
+        }
+
+
+        public void DrawShapes(Graphics graphics, List<ShapeInfo> shapes)
+        {
+            foreach (var shape in shapes)
+            {
+                switch (shape.Type)
+                {
+                    case ShapeInfo.ShapeType.Rectangle:
+                        graphics.DrawRectangle(Pens.Black, shape.Bounds);
+                        break;
+                    case ShapeInfo.ShapeType.Circle:
+                        graphics.DrawEllipse(Pens.Red, shape.Bounds);
+                        break;
+                    case ShapeInfo.ShapeType.Line:
+                        graphics.DrawLine(Pens.Blue, shape.Points[0], shape.Points[1]);
+                        break;
+                    case ShapeInfo.ShapeType.Ellipse:
+                        graphics.DrawEllipse(Pens.Green, shape.Bounds);
+                        break;
+                    case ShapeInfo.ShapeType.Polygon:
+                        graphics.DrawPolygon(Pens.Orange, shape.Points);
+                        break;
+                    case ShapeInfo.ShapeType.Arc:
+                        graphics.DrawArc(Pens.Purple, shape.Bounds, shape.StartAngle, shape.SweepAngle);
+                        break;
+                }
+            }
+        }
+
+       /* private void DrawCompositeShape()
+        {
+            pictureBox1.Refresh();
+            using (Graphics graphics = pictureBox1.CreateGraphics())
+            {
+                var shapes = GenerateShapes();
+                DrawShapes(graphics, shapes);
+            }
+        }
+       */
+
 
         private ICommand ParseCommand(string commandText)
         {
@@ -296,7 +352,7 @@ namespace ASE_Programming_Language
         }
 
 
-        private void ExecuteMultiLineCommands(string commandText)
+        internal void ExecuteMultiLineCommands(string commandText)
         {
             var lines = commandText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             using (Graphics graphics = pictureBox1.CreateGraphics());
@@ -318,7 +374,7 @@ namespace ASE_Programming_Language
                             }
                             else
                             {
-                                MessageBox.Show("Invalid number format.");
+                              //  MessageBox.Show("Invalid number format.");
                                 return; // Stop processing further commands
                             }
                         }
@@ -339,57 +395,78 @@ namespace ASE_Programming_Language
                                 }
                                 else
                                 {
-                                    MessageBox.Show("Invalid format for size command.");
+                                    //MessageBox.Show("Invalid format for size command.");
                                 }
                             }
                             // ... other command processing logic ...
                         }
 
+                if (conditionMet)
+                {
+                    string trimmedLine = line.Trim().ToLower();
+                    if (trimmedLine.StartsWith("size ="))
+                    {
+                        string[] parts = trimmedLine.Split('=');
+                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int parsedSize))
+                        {
+                            size = parsedSize; // Set the size variable
+                        }
+                    }
+                    else if (trimmedLine.StartsWith("if size >"))
+                    {
+                        string[] parts = trimmedLine.Split('>');
+                        if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int comparisonValue))
+                        {
+                            conditionMet = size > comparisonValue;
+                            inIfBlock = true;
+                        }
+                    }
+                    else if (trimmedLine == "endif")
+                    {
+                        inIfBlock = false;
                         if (conditionMet)
                         {
-                            string trimmedLine = line.Trim().ToLower();
-                            if (trimmedLine.StartsWith("size ="))
+                            foreach (var cmd in commandBlock)
                             {
-                                string[] parts = trimmedLine.Split('=');
-                                if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int parsedSize))
-                                {
-                                    size = parsedSize; // Set the size variable
-                                }
-                            }
-                            else if (trimmedLine.StartsWith("if size >"))
-                            {
-                                string[] parts = trimmedLine.Split('>');
-                                if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int comparisonValue))
-                                {
-                                    conditionMet = size > comparisonValue;
-                                    inIfBlock = true;
-                                }
-                            }
-                            else if (trimmedLine == "endif")
-                            {
-                                inIfBlock = false;
-                                if (conditionMet)
-                                {
-                                    foreach (var cmd in commandBlock)
-                                    {
-                                        ProcessCommand(cmd);
-                                    }
-                                }
-                                commandBlock.Clear();
-                                conditionMet = false;
-                            }
-                            else if (inIfBlock)
-                            {
-                                commandBlock.Add(trimmedLine);
+                                ProcessCommand(cmd);
                             }
                         }
-
-                
-            
-
-
-                // ... (rest of your existing logic for processing if-endif blocks) ...
+                        commandBlock.Clear();
+                        conditionMet = false;
+                    }
+                    else if (inIfBlock)
+                    {
+                        commandBlock.Add(trimmedLine);
+                    }
+                }
+                       // ... (rest of your existing logic for processing if-endif blocks) ...
             }
+        }
+
+        private void DrawConcentricCirclesWithGap(int gapMultiplier)
+        {
+            using (Graphics graphics = pictureBox1.CreateGraphics())
+            {
+                LastGapMultiplier = gapMultiplier; // Store the value for testing
+                pictureBox1.Refresh(); // Clear the PictureBox
+
+                int centerX = pictureBox1.Width / 2;
+                int centerY = pictureBox1.Height / 2;
+
+                for (int count = 1; count <= 10; count++)
+                {
+                    int size = count * gapMultiplier;
+                    graphics.DrawEllipse(Pens.Black, centerX - size, centerY - size, size * 2, size * 2);
+                }
+            }
+        }
+
+
+        public int GetVariableValue(string variableName)
+        {
+            // Assuming the 'Interpreter' class has a method 'GetVariableValue'
+            // that returns the value of a variable given its name.
+            return interpreter.GetVariableValue(variableName);
         }
 
 
@@ -489,7 +566,7 @@ namespace ASE_Programming_Language
             }
         }
 
-        private List<string> CheckSyntax(string[] lines)
+        internal List<string> CheckSyntax(string[] lines)
         {
             List<string> errors = new List<string>();
             for (int i = 0; i < lines.Length; i++)
@@ -595,6 +672,68 @@ namespace ASE_Programming_Language
                     break;
                     // Add cases for other shapes
             }
+        }
+
+        internal List<ShapeInfo> GenerateShapes()
+        {
+            var rnd = new Random();
+            var shapes = new List<ShapeInfo>();
+
+            // Add a rectangle
+            shapes.Add(new ShapeInfo
+            {
+                Type = ShapeInfo.ShapeType.Rectangle,
+                Bounds = new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(20, 100), rnd.Next(20, 100))
+            });
+
+            // Add a circle
+            int radius = rnd.Next(10, 50);
+            shapes.Add(new ShapeInfo
+            {
+                Type = ShapeInfo.ShapeType.Circle,
+                Bounds = new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), radius * 2, radius * 2)
+            });
+
+            // Add a line
+            shapes.Add(new ShapeInfo
+            {
+                Type = ShapeInfo.ShapeType.Line,
+                Points = new Point[]
+                {
+            new Point(rnd.Next(0, 100), rnd.Next(0, 100)),
+            new Point(rnd.Next(100, 200), rnd.Next(100, 200))
+                }
+            });
+
+            // Add an ellipse
+            shapes.Add(new ShapeInfo
+            {
+                Type = ShapeInfo.ShapeType.Ellipse,
+                Bounds = new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(30, 80), rnd.Next(20, 60))
+            });
+
+            // Add a polygon (triangle)
+            shapes.Add(new ShapeInfo
+            {
+                Type = ShapeInfo.ShapeType.Polygon,
+                Points = new Point[]
+                {
+            new Point(rnd.Next(0, 200), rnd.Next(0, 200)),
+            new Point(rnd.Next(0, 200), rnd.Next(0, 200)),
+            new Point(rnd.Next(0, 200), rnd.Next(0, 200))
+                }
+            });
+
+            // Add an arc
+            shapes.Add(new ShapeInfo
+            {
+                Type = ShapeInfo.ShapeType.Arc,
+                Bounds = new Rectangle(rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(50, 100), rnd.Next(50, 100)),
+                StartAngle = 0,
+                SweepAngle = rnd.Next(180, 360)
+            });
+
+            return shapes;
         }
 
     }

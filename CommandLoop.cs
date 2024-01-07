@@ -31,7 +31,12 @@ public class CommandLoop : ICommand
     */
     public void Execute(Interpreter interpreter)
     {
-        int loopCount = interpreter.GetVariableValue(loopCountVariableName);
+        // If loopCountVariableName is not null, get the count from the interpreter
+        if (!string.IsNullOrEmpty(loopCountVariableName))
+        {
+            loopCount = interpreter.GetVariableValue(loopCountVariableName);
+        }
+
         for (int i = 0; i < loopCount; i++)
         {
             foreach (var command in commands)
@@ -40,6 +45,7 @@ public class CommandLoop : ICommand
             }
         }
     }
+
 
 
     // Implement the GetVariableName method
